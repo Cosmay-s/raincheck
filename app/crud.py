@@ -3,7 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import City
 
 
-async def get_or_create_city(session: AsyncSession, name: str, latitude: float, longitude: float) -> City:
+async def get_or_create_city(session: AsyncSession, name: str,
+                             latitude: float, longitude: float) -> City:
     """
     Получить город по координатам или создать новый с начальным счетчиком 1.
     """
@@ -14,7 +15,8 @@ async def get_or_create_city(session: AsyncSession, name: str, latitude: float, 
     )
     city = result.scalar_one_or_none()
     if not city:
-        city = City(name=name, latitude=latitude, longitude=longitude, search_count=0)
+        city = City(name=name, latitude=latitude, longitude=longitude,
+                    search_count=0)
         session.add(city)
         await session.flush()
     return city
