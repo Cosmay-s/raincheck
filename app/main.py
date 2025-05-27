@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, JSONResponse
 import os
@@ -11,7 +11,9 @@ from sqlalchemy import select
 from app.models import City
 
 app = FastAPI()
-templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__),
+                                                   "templates"))
+
 
 @app.on_event("startup")
 async def on_startup():
@@ -25,7 +27,8 @@ async def read_root(request: Request):
     """
     Главная страница.
 
-    Показывает последние популярные города и погоду для последнего запрошенного города (если есть).
+    Показывает последние популярные города и погоду для последнего
+    запрошенного города (если есть).
     """
     last_city = request.cookies.get("last_city")
     recent_city = None
@@ -70,7 +73,8 @@ async def get_weather(request: Request, city: str = Form(...)):
 
     async with async_session() as session:
         async with session.begin():
-            city_obj = await get_or_create_city(session, city, latitude, longitude)
+            city_obj = await get_or_create_city(session, city,
+                                                latitude, longitude)
             await increment_search_count(session, city_obj.id)
             count = city_obj.search_count
 
@@ -105,3 +109,19 @@ async def stats():
         )
         data = [{"city": name, "count": count} for name, count in result.fetchall()]
         return JSONResponse(content=data)
+
+
+@app.get("/api/cities")
+async def autocomplete_cities(q: str = Query(..., min_length=1)):
+    """
+    Возвращает список городов, начинающихся на q (часть названия).
+    """
+    async with async_session() as session:
+        result = await session.execute(
+            select(City.name)
+            .where(City.name.ilike(f"{q}%"))
+            .order_by(City.search_count.desc())
+            .limit(10)
+        )
+        cities = result.scalars().all()
+    return JSONResponse(content=cities)
