@@ -1,5 +1,6 @@
 import aiohttp
 import asyncio
+from typing import Optional, Tuple
 
 API_URL = "https://api.open-meteo.com/v1/forecast"
 GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search"
@@ -69,10 +70,13 @@ async def fetch_weather(lat: float, lon: float) -> str:
         return f"Ошибка при получении прогноза: {e}"
 
 
-async def get_weather_by_city(city_name: str) -> str:
-    """Получить прогноз по названию города."""
+async def get_weather_by_city(city_name: str) -> Tuple[str,
+                                                       Optional[float],
+                                                       Optional[float]]:
+    """Получить прогноз и координаты по названию города."""
     coords = await fetch_coordinates(city_name)
     if isinstance(coords, str):
-        return coords
+        return coords, None, None
     lat, lon = coords
-    return await fetch_weather(lat, lon)
+    forecast = await fetch_weather(lat, lon)
+    return forecast, lat, lon

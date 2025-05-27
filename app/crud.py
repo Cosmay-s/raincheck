@@ -1,40 +1,42 @@
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from models import City, SearchCount
+from app.models import City
 
 
-async def get_or_create_city(session: AsyncSession, city_name: str) -> City:
-    city_name = city_name.strip().lower()
-    stmt = select(City).where(City.name == city_name)
-    result = await session.execute(stmt)
+async def get_or_create_city(session: AsyncSession, name: str, latitude: float, longitude: float) -> City:
+    """
+    Получить город по координатам или создать новый с начальным счетчиком 1.
+    """
+    result = await session.execute(
+        select(City).where(
+            and_(City.latitude == latitude, City.longitude == longitude)
+        )
+    )
     city = result.scalar_one_or_none()
-    if city:
-        return city
-    city = City(name=city_name)
-    session.add(city)
-    await session.commit()
-    await session.refresh(city)
+    if not city:
+        city = City(name=name, latitude=latitude, longitude=longitude, search_count=0)
+        session.add(city)
+        await session.flush()
     return city
 
 
 async def increment_search_count(session: AsyncSession, city_id: int):
-    stmt = select(SearchCount).where(SearchCount.city_id == city_id)
-    result = await session.execute(stmt)
-    search_count = result.scalar_one_or_none()
-
-    if search_count:
-        search_count.count += 1
-        session.add(search_count)
-    else:
-        search_count = SearchCount(city_id=city_id, count=1)
-        session.add(search_count)
-    await session.commit()
+    """
+    Увеличить счетчик поисков для города по его ID.
+    """
+    result = await session.execute(select(City).where(City.id == city_id))
+    city = result.scalar_one()
+    city.search_count += 1
+    session.add(city)
 
 
-async def get_search_counts(session: AsyncSession):
-    stmt = (
-        select(City.name, SearchCount.count)
-        .join(SearchCount, City.id == SearchCount.city_id)
+async def get_top_cities(session: AsyncSession, limit: int = 5):
+    """
+    Получить список названий городов с наибольшим количеством поисков.
+    """
+    result = await session.execute(
+        select(City.name, City.search_count)
+        .order_by(City.search_count.desc())
+        .limit(limit)
     )
-    result = await session.execute(stmt)
-    return result.all()
+    return [{"city": name, "count": count} for name, count in result.fetchall()]
