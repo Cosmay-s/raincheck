@@ -1,14 +1,20 @@
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer, String, DateTime, func
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
 
 
-class Base(DeclarativeBase):
-    pass
+class City(Base):
+    __tablename__ = "cities"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True,
+                                    autoincrement=True)
+    name: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
 
 
-class History(Base):
-    __tablename__ = "history"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    city: Mapped[str] = mapped_column(String, nullable=False)
-    timestamp: Mapped = mapped_column(DateTime(timezone=True), server_default=func.now())
+class SearchCount(Base):
+    __tablename__ = "search_counts"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True,
+                                    autoincrement=True)
+    city_id: Mapped[int] = mapped_column(Integer, nullable=False, unique=True)
+    count: Mapped[int] = mapped_column(Integer, default=0)
