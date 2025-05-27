@@ -1,9 +1,10 @@
-from databases import Database
-from sqlalchemy import MetaData, create_engine
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "sqlite:///./weather_history.db"
+DATABASE_URL = "sqlite+aiosqlite:///./test.db" 
 
-database = Database(DATABASE_URL)
-metadata = MetaData()
+engine = create_async_engine(DATABASE_URL, echo=True)
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+async_session = sessionmaker(
+    engine, expire_on_commit=False, class_=AsyncSession
+)
