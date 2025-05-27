@@ -38,7 +38,7 @@ Raincheck — *Know Before You Go*
 | FastAPI         | fastapi                | Быстрый, async, удобный API    |
 | Шаблоны         | Jinja2                 | Динамический HTML              |
 | HTTP-клиент     | aiohttp                | Асинхронные запросы            |
-| ORM             | SQLAlchemy + databases | Работа с БД асинхронно         |
+| ORM             | SQLAlchemy             | Работа с БД                    |
 | Сервер          | uvicorn                | ASGI сервер                    |
 | Тестирование    | pytest + httpx         | Юнит и интеграционные тесты    |
 | UI              | Bootstrap (через CDN)  | Красивый и адаптивный фронтенд |
