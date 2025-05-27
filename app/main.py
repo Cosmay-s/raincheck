@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, JSONResponse
 import os
@@ -105,3 +105,19 @@ async def stats():
         )
         data = [{"city": name, "count": count} for name, count in result.fetchall()]
         return JSONResponse(content=data)
+
+
+@app.get("/api/cities")
+async def autocomplete_cities(q: str = Query(..., min_length=1)):
+    """
+    Возвращает список городов, начинающихся на q (часть названия).
+    """
+    async with async_session() as session:
+        result = await session.execute(
+            select(City.name)
+            .where(City.name.ilike(f"{q}%"))
+            .order_by(City.search_count.desc())
+            .limit(10)
+        )
+        cities = result.scalars().all()
+    return JSONResponse(content=cities)
