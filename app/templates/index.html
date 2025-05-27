@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8" />
     <title>Raincheck</title>
@@ -9,7 +9,7 @@
     <div class="container py-5">
         <h1 class="mb-4">🌤 Raincheck</h1>
 
-        <form method="post" action="/weather">
+        <form method="post" action="/">
             <div class="mb-3">
                 <label for="city" class="form-label">Введите город</label>
                 <input type="text" class="form-control" id="city" name="city" placeholder="например, Королёв" required>
@@ -19,10 +19,11 @@
 
         {% if forecast %}
         <div class="mt-5">
-            <h3>Прогноз погоды для {{ city }}:</h3>
+            <h3>Прогноз погоды для города {{ city }}:</h3>
             <pre>{{ forecast }}</pre>
         </div>
         {% endif %}
     </div>
 </body>
 </html>
+
