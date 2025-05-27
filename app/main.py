@@ -11,7 +11,9 @@ from sqlalchemy import select
 from app.models import City
 
 app = FastAPI()
-templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__),
+                                                   "templates"))
+
 
 @app.on_event("startup")
 async def on_startup():
@@ -25,7 +27,8 @@ async def read_root(request: Request):
     """
     Главная страница.
 
-    Показывает последние популярные города и погоду для последнего запрошенного города (если есть).
+    Показывает последние популярные города и погоду для последнего
+    запрошенного города (если есть).
     """
     last_city = request.cookies.get("last_city")
     recent_city = None
@@ -70,7 +73,8 @@ async def get_weather(request: Request, city: str = Form(...)):
 
     async with async_session() as session:
         async with session.begin():
-            city_obj = await get_or_create_city(session, city, latitude, longitude)
+            city_obj = await get_or_create_city(session, city,
+                                                latitude, longitude)
             await increment_search_count(session, city_obj.id)
             count = city_obj.search_count
 
