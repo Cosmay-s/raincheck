@@ -43,4 +43,3 @@ async def search_cities_by_prefix(prefix: str, limit: int = 10):
         )
         cities = result.scalars().all()
     return cities
-
