@@ -1,26 +1,22 @@
-from fastapi import FastAPI, Request, Form, Query
+from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 import os
 import base64
 
 from app.weather import get_weather_by_city
-from app.database import async_session, init_db
-from app.crud import get_or_create_city, increment_search_count, get_top_cities
-from sqlalchemy import select
-from app.models import City
+from app.repository import get_top_cities_repo, process_city_search_repo
 
 app = FastAPI()
-templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__),
-                                                   "templates"))
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
 
 @app.on_event("startup")
 async def on_startup():
-    """
-    Инициализация базы данных — создание всех таблиц при старте приложения.
-    """
+    """Инициализация базы данных при старте приложения."""
+    from app.database import init_db
     await init_db()
+
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
@@ -39,29 +35,29 @@ async def read_root(request: Request):
         except Exception:
             recent_city = None
 
-    async with async_session() as session:
-        top_cities = await get_top_cities(session, limit=5)
+    top_cities = await get_top_cities_repo(limit=5)
 
     return templates.TemplateResponse("index.html", {
         "request": request,
         "forecast": None,
         "city": recent_city,
         "search_count": None,
-        "top_cities": top_cities
+        "top_cities": top_cities,
+        "error": None
     })
+
 
 @app.post("/", response_class=HTMLResponse)
 async def get_weather(request: Request, city: str = Form(...)):
     """
     Обработка формы с названием города.
 
-    Получает погоду, обновляет статистику поиска в базе и отображает данные.
+    Получает погоду, обновляет статистику поиска и отображает результат.
     """
     forecast, latitude, longitude = await get_weather_by_city(city)
 
     if latitude is None or longitude is None:
-        async with async_session() as session:
-            top_cities = await get_top_cities(session, limit=5)
+        top_cities = await get_top_cities_repo(limit=5)
         return templates.TemplateResponse("index.html", {
             "request": request,
             "forecast": None,
@@ -71,14 +67,7 @@ async def get_weather(request: Request, city: str = Form(...)):
             "error": "Не удалось получить координаты для города. Попробуйте другой город."
         })
 
-    async with async_session() as session:
-        async with session.begin():
-            city_obj = await get_or_create_city(session, city,
-                                                latitude, longitude)
-            await increment_search_count(session, city_obj.id)
-            count = city_obj.search_count
-
-        top_cities = await get_top_cities(session, limit=5)
+    city_obj, count, top_cities = await process_city_search_repo(city, latitude, longitude)
 
     response = templates.TemplateResponse("index.html", {
         "request": request,
@@ -93,35 +82,3 @@ async def get_weather(request: Request, city: str = Form(...)):
     response.set_cookie("last_city", encoded_city, max_age=60*60*24*30)
 
     return response
-
-
-@app.get("/api/stats")
-async def stats():
-    """
-    API для получения статистики популярных городов.
-
-    Возвращает JSON с городами и количеством запросов, отсортированный по убыванию.
-    """
-    async with async_session() as session:
-        result = await session.execute(
-            select(City.name, City.search_count)
-            .order_by(City.search_count.desc())
-        )
-        data = [{"city": name, "count": count} for name, count in result.fetchall()]
-        return JSONResponse(content=data)
-
-
-@app.get("/api/cities")
-async def autocomplete_cities(q: str = Query(..., min_length=1)):
-    """
-    Возвращает список городов, начинающихся на q (часть названия).
-    """
-    async with async_session() as session:
-        result = await session.execute(
-            select(City.name)
-            .where(City.name.ilike(f"{q}%"))
-            .order_by(City.search_count.desc())
-            .limit(10)
-        )
-        cities = result.scalars().all()
-    return JSONResponse(content=cities)

@@ -53,14 +53,15 @@ raincheck/                # Корень проекта
 │   ├── main.py           # Точка входа FastAPI, роуты, DI, шаблоны
 │   ├── models.py         # Модели SQLAlchemy 2.0 с Mapped классами
 │   ├── database.py       # Инициализация async движка и сессий
-│   ├── crud.py           # CRUD функции для работы с БД
+│   ├── crud.py           # CRUD функции для работы с БД (низкоуровневые операции)
+│   ├── repository.py     # Репозиторий — объединение CRUD с бизнес-логикой
 │   ├── weather.py        # Логика запросов к API погоды
 │   └── templates/        # Jinja2 шаблоны
 │       └── index.html
 ├── tests/                # Тесты (unit/integration)
 │   └── test_api.py
 ├── requirements.txt      # Зависимости
-└── README.md             # Документация
+└── README.md             # Документаци
 ```
 
 
