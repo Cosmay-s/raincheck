@@ -40,7 +40,6 @@ Raincheck — *Know Before You Go*
 | HTTP-клиент     | aiohttp                | Асинхронные запросы            |
 | ORM             | SQLAlchemy             | Работа с БД                    |
 | Сервер          | uvicorn                | ASGI сервер                    |
-| Тестирование    | pytest + httpx         | Юнит и интеграционные тесты    |
 | UI              | Bootstrap (через CDN)  | Красивый и адаптивный фронтенд |
 
 ---
@@ -58,10 +57,8 @@ raincheck/                # Корень проекта
 │   ├── weather.py        # Логика запросов к API погоды
 │   └── templates/        # Jinja2 шаблоны
 │       └── index.html
-├── tests/                # Тесты (unit/integration)
-│   └── test_api.py
 ├── requirements.txt      # Зависимости
-└── README.md             # Документаци
+└── README.md             # Документация
 ```
 
 
@@ -77,3 +74,5 @@ raincheck/                # Корень проекта
 Запустите приложение:
    ```bash
    uvicorn app.main:app --reload
+
+  
