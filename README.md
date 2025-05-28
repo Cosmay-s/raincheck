@@ -25,7 +25,7 @@ Raincheck — *Know Before You Go*
 - [x] **API для статистики количества запросов по городам**  
   Доступен эндпоинт `/api/stats`, возвращающий JSON с городами и количеством запросов.
 
-- [ ] **Docker-контейнер для удобного запуска**  
+- [x] **Docker-контейнер для удобного запуска**  
 
 - [ ] **Тесты для основных функций**  
 
@@ -66,13 +66,24 @@ raincheck/                # Корень проекта
 
 ## Запуск
 
-1. Клонируйте репозиторий  
-2. Установите зависимости:  
-   ```bash
-   pip install -r requirements.txt
+Локально
+Клонируйте репозиторий
+
+Установите зависимости:
+pip install -r requirements.txt
 
 Запустите приложение:
-   ```bash
-   uvicorn app.main:app --reload
+uvicorn app.main:app --reload
+
+Откройте в браузере: http://localhost:8000
+
+В Docker
+Соберите Docker-образ:
+docker build -t raincheck-app .
+
+Запустите контейнер:
+docker run -p 8000:8000 raincheck-app
+
+Откройте в браузере: http://localhost:8000
 
   
