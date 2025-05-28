@@ -1,5 +1,7 @@
+from sqlalchemy import select
 from app.database import async_session
 from app.crud import get_or_create_city, increment_search_count, get_top_cities
+from app.models import City
 
 
 async def get_top_cities_repo(limit: int = 5):
@@ -26,3 +28,19 @@ async def process_city_search_repo(city_name: str, latitude: float,
             count = city_obj.search_count
         top_cities = await get_top_cities(session, limit=5)
     return city_obj, count, top_cities
+
+
+async def search_cities_by_prefix(prefix: str, limit: int = 10):
+    """
+    Получить список городов, начинающихся с префикса `prefix`.
+    """
+    async with async_session() as session:
+        result = await session.execute(
+            select(City.name)
+            .where(City.name.ilike(f"{prefix}%"))
+            .order_by(City.search_count.desc())
+            .limit(limit)
+        )
+        cities = result.scalars().all()
+    return cities
+

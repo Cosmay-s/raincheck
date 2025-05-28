@@ -1,11 +1,11 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, Query
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 import os
 import base64
 
 from app.weather import get_weather_by_city
-from app.repository import get_top_cities_repo, process_city_search_repo
+from app.repository import get_top_cities_repo, process_city_search_repo, search_cities_by_prefix
 
 app = FastAPI()
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
@@ -82,3 +82,12 @@ async def get_weather(request: Request, city: str = Form(...)):
     response.set_cookie("last_city", encoded_city, max_age=60*60*24*30)
 
     return response
+
+
+@app.get("/api/cities", response_class=JSONResponse)
+async def autocomplete_cities(q: str = Query(..., min_length=1)):
+    """
+    Возвращает список городов, начинающихся на q (часть названия).
+    """
+    cities = await search_cities_by_prefix(q)
+    return JSONResponse(content=cities)
